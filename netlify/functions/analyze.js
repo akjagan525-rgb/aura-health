@@ -1,4 +1,6 @@
 const MAX_QUERY_LENGTH = 1500;
+const MAX_AI_TEXT_LENGTH = 1600;
+const MAX_AI_LIST_ITEM_LENGTH = 360;
 const ALLOWED_LANGUAGES = new Set(['English', 'Tamil']);
 const MIN_HUMAN_INTERACTION_MS = 900;
 const CONTEXT_VALUES = {
@@ -99,6 +101,19 @@ function contextForPrompt(context) {
     .join('; ') || 'No optional context was selected.';
 }
 
+function safeText(value, maxLength = MAX_AI_TEXT_LENGTH) {
+  return typeof value === 'string'
+    ? value.replace(/\s+/g, ' ').trim().slice(0, maxLength)
+    : '';
+}
+
+function safeList(value, fallback) {
+  const items = Array.isArray(value)
+    ? value.map(item => safeText(item, MAX_AI_LIST_ITEM_LENGTH)).filter(Boolean).slice(0, 4)
+    : [];
+  return items.length ? items : fallback;
+}
+
 function recommendedSources(query) {
   return TOPIC_SOURCES.find(topic => topic.pattern.test(query))?.sources || GENERAL_SOURCES;
 }
@@ -143,24 +158,43 @@ function emergencyResponse(language, query) {
 
 function normalizeAnswer(answer, query, language) {
   const tamil = language === 'Tamil';
+  const raw = answer && typeof answer === 'object' && !Array.isArray(answer) ? answer : {};
+  const defaults = tamil
+    ? {
+      title: 'பொதுவான உடல்நலத் தகவல்',
+      answer: 'இந்தத் தகவல் பொதுவான கல்விக்காக மட்டுமே. உங்கள் அறிகுறிகள் கவலையளித்தால் மருத்துவரிடம் பேசுங்கள்.',
+      why: ['தனிப்பட்ட அறிகுறிகளுக்கு பல காரணங்கள் இருக்கலாம்; முழு சூழலையும் ஒரு மருத்துவரால் மட்டுமே மதிப்பிட முடியும்.'],
+      steps: ['அறிகுறிகளை கவனித்து, தேவைப்பட்டால் மருத்துவ ஆலோசனை பெறுங்கள்.'],
+      care: ['அறிகுறிகள் கடுமையாகவோ, புதிதாகவோ, தொடர்ச்சியாகவோ, மோசமாகவோ இருந்தால் மருத்துவரை அணுகவும்.'],
+      watch: ['அறிகுறி எப்போது வருகிறது, எவ்வளவு நேரம் நீடிக்கிறது, மேம்படுகிறதா அல்லது மோசமாகிறதா என்பதைக் கவனியுங்கள்.'],
+      prompts: ['இந்த அறிகுறியைப் பற்றி மருத்துவரிடம் நான் பகிர வேண்டிய முக்கிய தகவல் என்ன?'],
+      tip: 'உங்கள் மருத்துவ வரலாற்றை அறிந்த மருத்துவரே தனிப்பட்ட வழிகாட்டுதலுக்கு சிறந்தவர்.'
+    }
+    : {
+      title: 'General health information',
+      answer: 'This information is for general education only. Speak with a clinician if your symptoms are concerning.',
+      why: ['Many factors can contribute to symptoms; only a clinician can assess your full situation.'],
+      steps: ['Notice how you feel and seek medical advice if needed.'],
+      care: ['Seek medical care if symptoms are severe, new, persistent, worsening, or worrying you.'],
+      watch: ['Notice when it happens, how long it lasts, and whether it is improving or worsening.'],
+      prompts: ['What details about this symptom would be most useful to share with a clinician?'],
+      tip: 'A clinician who knows your medical history is your best source of personal guidance.'
+    };
+  const urgency = ['information', 'routine', 'soon'].includes(raw.urgency) ? raw.urgency : 'information';
   return {
-    ...answer,
+    title_en: safeText(raw.title_en, 120) || (tamil ? 'Health information' : defaults.title),
+    title_ta: safeText(raw.title_ta, 120) || (tamil ? defaults.title : ''),
+    answer: safeText(raw.answer) || defaults.answer,
+    why_it_happens: safeList(raw.why_it_happens, defaults.why),
+    what_to_do: safeList(raw.what_to_do, defaults.steps),
     sources: recommendedSources(query),
-    when_to_seek_care: Array.isArray(answer.when_to_seek_care) && answer.when_to_seek_care.length
-      ? answer.when_to_seek_care
-      : tamil
-        ? ['அறிகுறிகள் கடுமையாகவோ, புதிதாகவோ, தொடர்ச்சியாகவோ, மோசமாகவோ இருந்தால் மருத்துவரை அணுகவும்.']
-        : ['Seek medical care if symptoms are severe, new, persistent, worsening, or worrying you.'],
-    what_to_watch: Array.isArray(answer.what_to_watch) && answer.what_to_watch.length
-      ? answer.what_to_watch
-      : tamil
-        ? ['அறிகுறி எப்போது வருகிறது, எவ்வளவு நேரம் நீடிக்கிறது, மேம்படுகிறதா அல்லது மோசமாகிறதா என்பதைக் கவனியுங்கள்.']
-        : ['Notice when it happens, how long it lasts, and whether it is improving or worsening.'],
-    discussion_prompts: Array.isArray(answer.discussion_prompts) && answer.discussion_prompts.length
-      ? answer.discussion_prompts
-      : tamil
-        ? ['இந்த அறிகுறியைப் பற்றி மருத்துவரிடம் நான் பகிர வேண்டிய முக்கிய தகவல் என்ன?']
-        : ['What details about this symptom would be most useful to share with a clinician?']
+    when_to_seek_care: safeList(raw.when_to_seek_care, defaults.care),
+    what_to_watch: safeList(raw.what_to_watch, defaults.watch),
+    discussion_prompts: safeList(raw.discussion_prompts, defaults.prompts),
+    urgency,
+    urgency_message: urgency === 'soon' ? safeText(raw.urgency_message, 320) : '',
+    fun_fact_or_tip: safeText(raw.fun_fact_or_tip, 420) || defaults.tip,
+    youtube_search: safeText(raw.youtube_search, 120) || 'health education'
   };
 }
 
