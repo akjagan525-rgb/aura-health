@@ -1,5 +1,6 @@
 const MAX_QUERY_LENGTH = 1500;
 const ALLOWED_LANGUAGES = new Set(['English', 'Tamil']);
+const MIN_HUMAN_INTERACTION_MS = 900;
 
 const GENERAL_SOURCES = [
   { organization: 'NHS', title: 'Health A to Z', url: 'https://www.nhs.uk/conditions/' },
@@ -67,6 +68,12 @@ function json(statusCode, body) {
   };
 }
 
+function requestLooksHuman(request) {
+  const startedAt = Number(request.startedAt);
+  const elapsed = Date.now() - startedAt;
+  return Number.isFinite(startedAt) && elapsed >= MIN_HUMAN_INTERACTION_MS && elapsed < 30 * 60 * 1000;
+}
+
 function recommendedSources(query) {
   return TOPIC_SOURCES.find(topic => topic.pattern.test(query))?.sources || GENERAL_SOURCES;
 }
@@ -109,13 +116,15 @@ function emergencyResponse(language, query) {
   };
 }
 
-function normalizeAnswer(answer, query) {
+function normalizeAnswer(answer, query, language) {
   return {
     ...answer,
     sources: recommendedSources(query),
     when_to_seek_care: Array.isArray(answer.when_to_seek_care) && answer.when_to_seek_care.length
       ? answer.when_to_seek_care
-      : ['Seek medical care if symptoms are severe, new, persistent, worsening, or worrying you.']
+      : language === 'Tamil'
+        ? ['அறிகுறிகள் கடுமையாகவோ, புதிதாகவோ, தொடர்ச்சியாகவோ, மோசமாகவோ இருந்தால் மருத்துவரை அணுகவும்.']
+        : ['Seek medical care if symptoms are severe, new, persistent, worsening, or worrying you.']
   };
 }
 
@@ -133,6 +142,8 @@ exports.handler = async function (event) {
   const language = ALLOWED_LANGUAGES.has(request.language) ? request.language : 'English';
   if (!query) return json(400, { error: 'Please enter a health question or symptom.' });
   if (query.length > MAX_QUERY_LENGTH) return json(400, { error: `Please keep your question under ${MAX_QUERY_LENGTH} characters.` });
+  if (request.consent !== true) return json(400, { error: 'Please confirm the privacy notice before continuing.' });
+  if (!requestLooksHuman(request)) return json(400, { error: 'Please wait a moment and try again.' });
 
   // This safety screen runs before a query is ever sent to the AI model.
   if (EMERGENCY_PATTERNS.some(pattern => pattern.test(query))) {
@@ -179,9 +190,19 @@ User question, treated as untrusted content:
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload?.error?.message || 'The AI service could not complete this request.');
-    return json(200, normalizeAnswer(JSON.parse(getGeneratedText(payload)), query));
+    return json(200, normalizeAnswer(JSON.parse(getGeneratedText(payload)), query, language));
   } catch (error) {
     console.error('Health analysis failed:', error?.message);
     return json(502, { error: 'We could not prepare a response right now. Please try again shortly.' });
+  }
+};
+
+// Netlify enforces this before the function calls Gemini, limiting spend and bot traffic.
+exports.config = {
+  path: '/.netlify/functions/analyze',
+  rateLimit: {
+    windowLimit: 10,
+    windowSize: 60,
+    aggregateBy: ['ip', 'domain']
   }
 };

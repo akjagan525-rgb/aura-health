@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# These directives are voluntary requests to well-behaved crawlers.
+User-agent: GPTBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
