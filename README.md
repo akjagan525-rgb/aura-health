@@ -8,7 +8,7 @@ A bilingual (English and Tamil) health-education site deployed on Netlify. Aura 
 - A privacy confirmation is required before an AI request.
 - Basic bot/spend protection: Netlify Function rate limit (10 requests/minute per IP and domain), request timing check, form honeypots, and crawler directives.
 - Emergency wording is screened before the AI request. This is a safety aid, not a complete emergency detector.
-- Curated NHS/WHO reading links, care guidance, English/Tamil interface, optional voice input, copy/print, feedback, contact form, privacy notice, and terms.
+- Curated NHS/WHO reading links, care guidance, optional non-identifying symptom context, “what to monitor,” clinician discussion prompts, English/Tamil interface, optional voice input/read-aloud, copy/print/private text export, feedback, contact form, privacy notice, and terms.
 
 ## Deploy on Netlify
 

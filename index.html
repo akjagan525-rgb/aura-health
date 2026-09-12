@@ -68,6 +68,95 @@
     function feedback(rating){const body=new URLSearchParams({"form-name":"aura-feedback",rating:rating,language:lang,page:location.pathname});fetch("/",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:body.toString()}).catch(function(){});el.up.disabled=true;el.down.disabled=true;(rating==="helpful"?document.getElementById("upText"):document.getElementById("downText")).textContent=words().thanks}
     function setupVoice(){const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;if(!Speech){el.voice.disabled=true;return}el.voice.disabled=false;recognition=new Speech();recognition.lang=lang==="Tamil"?"ta-IN":"en-IN";recognition.interimResults=true;recognition.continuous=false;recognition.onstart=function(){el.voice.classList.add("recording");el.voiceStatus.textContent=lang==="Tamil"?"கேட்கிறது… முடிந்ததும் நிறுத்தப்படும்.":"Listening… it will stop when you finish speaking."};recognition.onresult=function(event){let spoken="";for(let i=event.resultIndex;i<event.results.length;i++)spoken+=event.results[i][0].transcript;el.query.value+=((el.query.value&&spoken)?" ":"")+spoken;count()};recognition.onerror=function(){el.voiceStatus.textContent=lang==="Tamil"?"குரல் உள்ளீடு கிடைக்கவில்லை. தயவுசெய்து தட்டச்சு செய்யவும்.":"Voice input was unavailable. Please type your question instead."};recognition.onend=function(){el.voice.classList.remove("recording")}}
     function theme(){const light=document.body.classList.contains("light");el.theme.innerHTML=light?'<i class="fa-solid fa-moon"></i>':'<i class="fa-solid fa-sun"></i>';el.theme.setAttribute("aria-label",light?"Switch to dark mode":"Switch to light mode")}if(localStorage.getItem("aura-theme")==="light")document.body.classList.add("light");theme();el.theme.addEventListener("click",function(){document.body.classList.toggle("light");localStorage.setItem("aura-theme",document.body.classList.contains("light")?"light":"dark");theme()});el.form.addEventListener("submit",ask);el.query.addEventListener("input",count);el.query.addEventListener("keydown",function(event){if((event.ctrlKey||event.metaKey)&&event.key==="Enter")el.form.requestSubmit()});el.language.addEventListener("change",function(event){lang=event.target.value;localStorage.setItem("aura-language",lang);started=Date.now();setupVoice();fill()});el.voice.addEventListener("click",function(){if(recognition)recognition.start()});el.copy.addEventListener("click",copyAnswer);el.pdf.addEventListener("click",function(){window.print()});el.up.addEventListener("click",function(){feedback("helpful")});el.down.addEventListener("click",function(){feedback("not_helpful")});document.querySelectorAll("[data-emergency]").forEach(function(button){button.addEventListener("click",function(){el.modal.classList.add("open")})});el.modalClose.addEventListener("click",function(){el.modal.classList.remove("open")});el.modal.addEventListener("click",function(event){if(event.target===el.modal)el.modal.classList.remove("open")});document.addEventListener("keydown",function(event){if(event.key==="Escape")el.modal.classList.remove("open")});fill();count();setupVoice();
+    let contextPanel,watchCard,clinicianCard,readButton,summaryButton;
+    function contextText(){
+      return lang==="Tamil"
+        ? {title:"பயனுள்ள சூழலைச் சேர்க்கவும்",note:"விருப்பமானது · இவை இந்தப் பதிலுக்காக மட்டுமே அனுப்பப்படும்.",duration:"இது எப்போது தொடங்கியது?",change:"இது எப்படி மாறுகிறது?",impact:"தினசரி செயல்பாடுகளில் தாக்கம்?",today:"இன்று",few_days:"சில நாட்களுக்கு முன்",more_than_week:"ஒரு வாரத்திற்கும் மேலாக",same:"அதேபோல் உள்ளது",better:"மேம்படுகிறது",worse:"மோசமாகிறது",none:"தாக்கம் இல்லை",some:"சில செயல்பாடுகளைப் பாதிக்கிறது",major:"சாதாரண செயல்களை நிறுத்துகிறது",unsure:"தெரியவில்லை",watch:"எதை கவனிக்கலாம்",talk:"மருத்துவருடன் பேச உதவும் கேள்விகள்",listen:"பதிலை கேளுங்கள்",stop:"நிறுத்து",save:"தனிப்பட்ட சுருக்கத்தைச் சேமி",saving:"சேமிக்கப்படுகிறது…",watchFallback:"அறிகுறி எப்போது வருகிறது, எவ்வளவு நேரம் நீடிக்கிறது, மேம்படுகிறதா அல்லது மோசமாகிறதா என்பதைக் கவனியுங்கள்.",talkFallback:"இந்த அறிகுறியைப் பற்றி மருத்துவரிடம் நான் பகிர வேண்டிய முக்கிய தகவல் என்ன?",font:"எழுத்தை பெரிதாக்கு"}
+        : {title:"Add helpful context",note:"Optional · these choices are sent only with this response request.",duration:"When did this start?",change:"How is it changing?",impact:"Impact on daily life?",today:"Today",few_days:"A few days ago",more_than_week:"More than a week ago",same:"About the same",better:"Getting better",worse:"Getting worse",none:"Not getting in the way",some:"Affecting some activities",major:"Stopping normal activities",unsure:"Not sure",watch:"What to monitor",talk:"Questions for a clinician",listen:"Listen to answer",stop:"Stop listening",save:"Save private summary",saving:"Saving…",watchFallback:"Notice when it happens, how long it lasts, and whether it is improving or worsening.",talkFallback:"What details about this symptom would be most useful to share with a clinician?",font:"Increase text size"};
+    }
+    function selectedContext(){
+      if(!contextPanel)return {};
+      return {duration:contextPanel.querySelector("[name=duration]").value,change:contextPanel.querySelector("[name=change]").value,impact:contextPanel.querySelector("[name=impact]").value};
+    }
+    function renderContext(){
+      if(!contextPanel)return;
+      const t=contextText(),old=selectedContext();
+      contextPanel.querySelector(".context-title").textContent=t.title;
+      contextPanel.querySelector(".context-note").textContent=t.note;
+      const fields=[
+        ["duration",t.duration,["today",t.today],["few_days",t.few_days],["more_than_week",t.more_than_week],["unsure",t.unsure]],
+        ["change",t.change,["same",t.same],["better",t.better],["worse",t.worse],["unsure",t.unsure]],
+        ["impact",t.impact,["none",t.none],["some",t.some],["major",t.major],["unsure",t.unsure]]
+      ];
+      const grid=contextPanel.querySelector(".context-grid");grid.innerHTML="";
+      fields.forEach(function(field){const label=document.createElement("label"),select=document.createElement("select"),head=document.createElement("span");head.textContent=field[1];select.name=field[0];field.slice(2).forEach(function(option){const item=document.createElement("option");item.value=option[0];item.textContent=option[1];if(old[field[0]]===option[0])item.selected=true;select.appendChild(item)});label.append(head,select);grid.appendChild(label)});
+    }
+    function listInto(target,items,fallback){
+      target.innerHTML="";(Array.isArray(items)&&items.length?items:[fallback]).slice(0,4).forEach(function(item){const li=document.createElement("li");li.textContent=item;target.appendChild(li)});
+    }
+    function updateEnhancedResults(answer){
+      if(!watchCard||!clinicianCard)return;
+      const t=contextText(),urgent=(answer.urgency||"").toLowerCase()==="emergency";
+      watchCard.hidden=urgent;clinicianCard.hidden=urgent;if(urgent)return;
+      watchCard.querySelector("h3 span").textContent=t.watch;clinicianCard.querySelector("h3 span").textContent=t.talk;
+      listInto(watchCard.querySelector("ol"),answer.what_to_watch,t.watchFallback);
+      listInto(clinicianCard.querySelector("ol"),answer.discussion_prompts,t.talkFallback);
+    }
+    function summaryText(){
+      if(!data)return "";
+      const section=function(title,list){return "\\n\\n"+title+"\\n"+Array.from(list.children).map(function(node){return "• "+node.textContent}).join("\\n")};
+      let text="Aura Health — educational summary\\n\\n"+el.resultTitle.textContent+"\\n\\n"+el.answer.textContent;
+      text+=section(words().whyTitle,el.whyList)+section(words().stepsTitle,el.stepsList)+section(words().careTitle,el.careList);
+      if(watchCard&&!watchCard.hidden)text+=section(watchCard.querySelector("h3 span").textContent,watchCard.querySelector("ol"));
+      text+="\\n\\nThis summary is educational information, not medical advice or a diagnosis.";
+      return text;
+    }
+    function speakAnswer(){
+      if(!data||!window.speechSynthesis)return;
+      const t=contextText(),speaking=window.speechSynthesis.speaking;
+      if(speaking){window.speechSynthesis.cancel();readButton.querySelector("span").textContent=t.listen;return}
+      const utterance=new SpeechSynthesisUtterance(el.resultTitle.textContent+". "+el.answer.textContent);utterance.lang=lang==="Tamil"?"ta-IN":"en-IN";
+      utterance.onend=function(){readButton.querySelector("span").textContent=contextText().listen};readButton.querySelector("span").textContent=t.stop;window.speechSynthesis.speak(utterance);
+    }
+    function saveSummary(){
+      const text=summaryText();if(!text)return;
+      const link=document.createElement("a"),blob=new Blob([text],{type:"text/plain;charset=utf-8"}),url=URL.createObjectURL(blob);
+      link.href=url;link.download="aura-health-educational-summary.txt";document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);
+    }
+    async function askEnhanced(event){
+      event.preventDefault();event.stopImmediatePropagation();
+      const question=el.query.value.trim();if(!question){el.query.focus();return}
+      if(!el.consent.checked){el.errorText.textContent=words().consentError;el.error.classList.add("show");return}
+      busy(true);try{
+        const response=await fetch("/.netlify/functions/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:question,language:lang,consent:true,startedAt:started,context:selectedContext()})});
+        const answer=await response.json().catch(function(){return{}});
+        if(!response.ok)throw new Error(response.status===429?words().rateError:(answer.error||words().errorTitle));
+        render(answer,false);updateEnhancedResults(answer);
+      }catch(error){el.errorText.textContent=error.message||words().errorTitle;el.error.classList.add("show");document.getElementById("results").scrollIntoView({behavior:"smooth",block:"start"})}finally{busy(false)}
+    }
+    function setupEnhancements(){
+      const style=document.createElement("style");
+      style.textContent=".context-box{margin-top:13px;padding:13px 14px;border:1px solid var(--line);border-radius:13px;background:color-mix(in srgb,var(--bg) 32%,transparent)}.context-top{display:flex;justify-content:space-between;gap:14px;align-items:baseline}.context-title{font-size:11px;font-weight:800;color:var(--text)}.context-note{color:var(--faint);font-size:9px}.context-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:11px}.context-grid label{display:grid;gap:5px;color:var(--muted);font-size:9px}.context-grid select{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font-size:10px}.a11y{border:1px solid var(--line);border-radius:8px;padding:8px 9px;background:transparent;color:var(--aqua);font-size:11px}.large-text .hero p,.large-text .ask>p,.large-text .answer,.large-text .bullets li,.large-text .numbers li,.large-text .side-card p{font-size:1.15em!important;line-height:1.75}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}@media(max-width:580px){.context-top{display:block}.context-note{display:block;margin-top:4px}.context-grid{grid-template-columns:1fr}}";
+      document.head.appendChild(style);
+      contextPanel=document.createElement("section");contextPanel.className="context-box";contextPanel.innerHTML='<div class="context-top"><strong class="context-title"></strong><span class="context-note"></span></div><div class="context-grid"></div>';el.form.appendChild(contextPanel);renderContext();
+      const side=document.querySelector(".side");
+      watchCard=document.createElement("article");watchCard.className="card side-card";watchCard.innerHTML='<h3><i class="fa-solid fa-binoculars"></i><span></span></h3><ol class="numbers"></ol>';
+      clinicianCard=document.createElement("article");clinicianCard.className="card side-card";clinicianCard.innerHTML='<h3><i class="fa-solid fa-comments"></i><span></span></h3><ol class="numbers"></ol>';
+      side.insertBefore(watchCard,side.lastElementChild);side.insertBefore(clinicianCard,side.lastElementChild);
+      const utilities=el.copy.parentElement;
+      readButton=document.createElement("button");readButton.type="button";readButton.innerHTML='<i class="fa-solid fa-volume-high"></i> <span></span>';readButton.addEventListener("click",speakAnswer);
+      summaryButton=document.createElement("button");summaryButton.type="button";summaryButton.innerHTML='<i class="fa-solid fa-download"></i> <span></span>';summaryButton.addEventListener("click",saveSummary);
+      utilities.append(readButton,summaryButton);
+      const fontButton=document.createElement("button");fontButton.type="button";fontButton.className="a11y";fontButton.innerHTML='<i class="fa-solid fa-text-height"></i>';fontButton.setAttribute("aria-pressed","false");fontButton.setAttribute("aria-label",contextText().font);
+      fontButton.addEventListener("click",function(){const enabled=document.body.classList.toggle("large-text");fontButton.setAttribute("aria-pressed",String(enabled));localStorage.setItem("aura-large-text",enabled?"yes":"no")});
+      if(localStorage.getItem("aura-large-text")==="yes"){document.body.classList.add("large-text");fontButton.setAttribute("aria-pressed","true")}
+      el.theme.after(fontButton);
+      el.form.addEventListener("submit",askEnhanced,true);
+      el.query.addEventListener("input",function(){if(Date.now()-started>25*60*1000)started=Date.now()-1000});
+      el.language.addEventListener("change",function(){renderContext();if(data)updateEnhancedResults(data);fontButton.setAttribute("aria-label",contextText().font);if(readButton)readButton.querySelector("span").textContent=contextText().listen;if(summaryButton)summaryButton.querySelector("span").textContent=contextText().save});
+      if(data)updateEnhancedResults(data);readButton.querySelector("span").textContent=contextText().listen;summaryButton.querySelector("span").textContent=contextText().save;
+    }
+    setupEnhancements();
   </script>
 </body>
 </html>
