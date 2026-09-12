@@ -37,7 +37,9 @@ exports.handler = async function (event) {
   if (!query) return json(400, { error: 'Please enter a health question or symptom.' });
   if (query.length > MAX_QUERY_LENGTH) return json(400, { error: `Please keep your question under ${MAX_QUERY_LENGTH} characters.` });
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  // Accept the original Netlify variable as well as the standard name.
+  // This keeps existing deployments working while GEMINI_API_KEY remains the preferred name.
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_API__KEY;
   if (!apiKey) return json(500, { error: 'This service has not been configured yet.' });
 
   const prompt = `
