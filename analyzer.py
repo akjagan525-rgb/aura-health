@@ -58,7 +58,7 @@ def analyze_symptoms(user_input: str, language: str = "Tamil") -> MedicalRespons
 
     try:
         response = client.models.generate_content(
-            model="gemini-3.6-flash",
+            model="gemini-2.5-flash",
             contents=f"User query ({language}): {user_input}",
             config=types.GenerateContentConfig(
                 system_instruction=system_instruction,

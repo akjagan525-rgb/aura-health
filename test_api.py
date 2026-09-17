@@ -11,7 +11,7 @@ if not api_key:
 client = genai.Client(api_key=api_key)
 
 response = client.models.generate_content(
-    model="gemini-3.6-flash",
+    model="gemini-2.5-flash",
     contents="Say 'Hello, your medical assistant is ready!' in one sentence."
 )
 print("\n" + response.text)
