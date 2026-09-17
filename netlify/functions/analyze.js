@@ -114,6 +114,13 @@ const TOPIC_SOURCES = [
     ]
   },
   {
+    pattern: /love|heartbreak|breakup|rejection|grief|sadness|relationship|காதல்|பிரிவு/i,
+    sources: [
+      { organization: 'NHS', title: 'Grief and emotional loss', url: 'https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/grief-and-loss/' },
+      { organization: 'Mind', title: 'Managing difficult feelings', url: 'https://www.mind.org.uk/information-support/types-of-mental-health-problems/' }
+    ]
+  },
+  {
     pattern: /chest|heart|breath|stroke|faint|seizure|bleed|allerg|chest pain|நெஞ்சு|மூச்சு|பக்கவாத|மயக்க|வலிப்பு|ரத்தப்போக்கு|ஒவ்வாமை/i,
     sources: [
       { organization: 'NHS', title: 'Chest pain', url: 'https://www.nhs.uk/conditions/chest-pain/' },
@@ -203,7 +210,7 @@ function extractJson(text) {
 
 function cleanQueryTopic(query) {
   return (query || '')
-    .replace(/^(what is|what are|what causes|why do|why does|how to|how do|can i|is it safe to|tell me about|explain)\s+/i, '')
+    .replace(/^(what is|what are|what causes|reason for|reasons for|cause of|causes of|why do|why does|why is|how to|how do|how can i|can i|is it safe to|tell me about|explain|meaning of|symptoms of)\s+/i, '')
     .replace(/[?!.,]+$/, '')
     .trim();
 }
@@ -260,6 +267,7 @@ function generateEducationalFallback(query, language, context) {
   else if (/stress|anxiety|worry|மன அழுத்தம்/i.test(q)) topic = 'stress';
   else if (/allergy|allergen|sneezing|ஒவ்வாமை/i.test(q)) topic = 'allergy';
   else if (/weight|diet|cholesterol|nutrition|உணவு|எடை/i.test(q)) topic = 'nutrition';
+  else if (/love|heartbreak|breakup|rejection|grief|sadness|relationship|காதல்|பிரிவு/i.test(q)) topic = 'emotional_pain';
 
   const knowledge = {
     kidney: {
@@ -626,6 +634,210 @@ function generateEducationalFallback(query, language, context) {
         yt: 'stress relief meditation breathing exercises tamil'
       }
     },
+    emotional_pain: {
+      en: {
+        title_en: 'The Neurobiology of Love & Heartbreak Pain',
+        title_ta: 'காதல் வலி மற்றும் மன வேதனையின் நரம்பியல் புரிதல்',
+        answer: 'Emotional heartbreak and "love pain" cause genuine physical sensations. Functional neuroimaging shows that social rejection activates the dorsal anterior cingulate cortex (dACC) and anterior insula—the identical neural pain matrix that processes physical injury and bodily ache.',
+        why: [
+          'Abrupt drop in dopamine and oxytocin (the neurochemicals of affection and reward), producing withdrawal-like biochemical distress',
+          'Activation of the brain\'s dorsal anterior cingulate cortex, which translates emotional distress into felt physical pain',
+          'Stress response triggering the sympathetic nervous system and the vagus nerve, causing chest tightness, "butterflies", or stomach ache',
+          'Elevated cortisol disrupting regular sleep architecture, energy levels, and emotional regulation'
+        ],
+        steps: [
+          'Acknowledge and validate your feelings: scientific evidence confirms that heartbreak pain is neurobiologically real, not "just in your head"',
+          'Engage in gentle daily aerobic movement (like walking in morning sunlight) to stimulate endogenous endorphin and serotonin synthesis',
+          'Practice slow, conscious diaphragmatic breathing (4-7-8 breathing) to activate the parasympathetic vagus nerve and reduce chest tightness',
+          'Stay connected with trusted friends, family, or support networks to replenish oxytocin through social bonding'
+        ],
+        care: [
+          'Seek immediate medical evaluation if chest pain is crushing, radiates down your arm or jaw, or is accompanied by severe shortness of breath (to rule out acute cardiovascular issues or Takotsubo cardiomyopathy)',
+          'Reach out immediately to crisis support or emergency services if you experience overwhelming despair or thoughts of self-harm',
+          'Consult a qualified psychologist, therapist, or physician if persistent sadness, insomnia, or inability to function continues for more than two weeks'
+        ],
+        watch: [
+          'Daily sleep consistency, appetite, and hydration levels',
+          'Distinction between somatic emotional ache in the chest vs. true exertional cardiac symptoms',
+          'Your internal self-dialogue and whether emotional pain begins to soften with time and rest'
+        ],
+        prompts: [
+          'What evidence-based psychological coping strategies or cognitive reframing techniques help process grief and heartbreak?',
+          'Could speaking with a counselor or therapist help me navigate these emotional and somatic symptoms?'
+        ],
+        tip: 'The ache in your chest during heartbreak is real: the vagus nerve connects your brain directly to your heart and gut, meaning emotional sadness physically alters muscular tension and heart rate.',
+        yt: 'neuroscience of heartbreak and love pain why it hurts'
+      },
+      ta: {
+        title_en: 'The Neurobiology of Love & Heartbreak Pain',
+        title_ta: 'காதல் வலி மற்றும் மன வேதனையின் நரம்பியல் புரிதல்',
+        answer: 'காதல் பிரிவு அல்லது நிராகரிப்பின் போது ஏற்படும் வலி கற்பனையல்ல; அது உடலில் ஏற்படும் உண்மையான உயிரியல் மாற்றமாகும். மூளையின் வலி மையமான dACC (dorsal anterior cingulate cortex) தூண்டப்படுவதால், உடல் காயம் ஏற்படும் போது ஏற்படும் அதே வலியை மூளை உணர்கிறது.',
+        why: [
+          'காதலில் இருக்கும்போது சுரந்த டோபமைன் (Dopamine) மற்றும் ஆக்சிடோசின் (Oxytocin) திடீரெனக் குறைவதால் ஏற்படும் மூளையின் வேதியியல் மாற்றம்',
+          'மூளையின் வலி நரம்புகள் தூண்டப்பட்டு, மன வலியை உடல் ரீதியான வலியாக மாற்றுவது',
+          'கார்டிசோல் போன்ற மன அழுத்த ஹார்மோன்கள் அதிகரித்து வேகஸ் நரம்பைத் (Vagus nerve) தூண்டுவதால் நெஞ்சில் பாரம் மற்றும் இறுக்கம் உண்டாவது',
+          'தூக்கமின்மை மற்றும் உணவில் நாட்டமின்மை காரணமாக உடல் சோர்வு அதிகரிப்பது'
+        ],
+        steps: [
+          'இந்த வலி இயற்கையானது என்பதை உணருங்கள்; உங்கள் மூளை வேதியியல் மாற்றங்களைச் சரிசெய்ய சிறிது காலம் தேவைப்படும்',
+          'காலை வெயிலில் 20-30 நிமிடங்கள் நடைப்பயிற்சி செய்யுங்கள்; இது உடலின் இயற்கையான எண்டார்பின் மற்றும் செரோடோனின் சுரப்பைத் தூண்டும்',
+          'ஆழ்ந்த மூச்சுப் பயிற்சி (Deep breathing) செய்வதன் மூலம் வேகஸ் நரம்பை அமைதிப்படுத்தி நெஞ்சு பாரத்தைக் குறைக்கலாம்',
+          'உங்களுக்கு ஆதரவாக இருக்கும் நண்பர்கள் அல்லது குடும்பத்தினருடன் மனம் திறந்து பேசுங்கள்; இது ஆக்சிடோசினை மீட்டெடுக்க உதவும்'
+        ],
+        care: [
+          'நெஞ்சு வலி தாங்க முடியாத அளவிற்கு இருந்து இடது கை, தாடைக்கு பரவினாலோ அல்லது மூச்சுத் திணறல் ஏற்பட்டாலோ உடனடியாக அவசர மருத்துவ சிகிச்சை பெறவும்',
+          'மன உளைச்சல் காரணமாக சுய தீங்கு அல்லது ஆபத்தான எண்ணங்கள் தோன்றினால் உடனே அவசர உதவி எண்களைத் தொடர்பு கொள்ளவும்',
+          'தீவிர சோகம், தூக்கமின்மை அல்லது இயல்பு வாழ்க்கை பாதிப்பு 2 வாரங்களுக்கு மேல் நீடித்தால் மனநல ஆலோசகரை (Counsellor/Therapist) அணுகவும்'
+        ],
+        watch: [
+          'தினசரி தூக்கம், பசி மற்றும் நீர்ச்சத்து போதுமான அளவு உள்ளதா என்பதைக் கவனியுங்கள்',
+          'நெஞ்சு வலி மன அமைதியின்மையால் வருகிறதா அல்லது உடல் உபாதையா என்று பாருங்கள்',
+          'நாட்கள் செல்லச் செல்ல மன வலி குறைகிறதா என்பதைக் கண்காணியுங்கள்'
+        ],
+        prompts: [
+          'காதல் பிரிவு மற்றும் மன அழுத்தத்தைக் கடக்க நான் என்ன ஆரோக்கியமான பழக்கங்களைக் கையாள வேண்டும்?',
+          'இந்த மன வேதனையிலிருந்து விடுபட ஒரு மனநல ஆலோசகரின் வழிகாட்டுதல் உதவுமா?'
+        ],
+        tip: 'காதல் பிரிவின் போது நெஞ்சில் வலி ஏற்படுவது உண்மைதான்: மூளையையும் இதயத்தையும் இணைக்கும் வேகஸ் நரம்பு (Vagus nerve) மன வேதனையின் போது இதயத் துடிப்பிலும் நெஞ்சு தசைகளிலும் இறுக்கத்தை உண்டாக்குகிறது.',
+        yt: 'why heartbreak hurts science and psychology tamil'
+      }
+    },
+    allergy: {
+      en: {
+        title_en: 'Allergies & Immune Sensitivity',
+        title_ta: 'ஒவ்வாமை மற்றும் எதிர்ப்புத் திறன்',
+        answer: 'Allergies occur when the immune system mistakenly identifies a harmless substance (such as pollen, pet dander, dust mites, or certain foods) as a threat, releasing histamine and inflammatory mediators.',
+        why: [
+          'Histamine release from mast cells causing tissue swelling, itching, and mucous secretion',
+          'Seasonal exposure to airborne tree, grass, or weed pollen',
+          'Contact sensitivity to indoor dust mites, pet dander, or mold spores',
+          'Genetic predisposition to atopic conditions (asthma, eczema, hay fever)'
+        ],
+        steps: [
+          'Identify and minimize contact with suspected environmental or dietary triggers',
+          'Rinse nasal passages gently with a sterile saline spray to clear trapped allergens',
+          'Keep bedroom windows closed during peak pollen times and wash bedding in warm water',
+          'Consider over-the-counter non-drowsy antihistamines following pharmacist advice'
+        ],
+        care: [
+          'Seek immediate emergency care for signs of anaphylaxis: swelling of the lips, tongue, or throat, wheezing, or dizziness',
+          'Consult an allergist or doctor if symptoms disrupt sleep or daily productivity despite basic precautions',
+          'Get tested if allergies trigger persistent asthma flare-ups or sinus infections'
+        ],
+        watch: [
+          'Specific environments, seasons, or foods preceding symptoms',
+          'Presence of eye itching, sneezing, skin hives, or breathing changes',
+          'Effectiveness of antihistamines or nasal rinses'
+        ],
+        prompts: [
+          'Would skin prick allergy testing or IgE blood testing help identify my triggers?',
+          'Are daily nasal steroid sprays appropriate for seasonal management?'
+        ],
+        tip: 'Taking a shower and changing clothes after spending prolonged time outdoors removes pollen clinging to your skin and hair before you go to sleep.',
+        yt: 'seasonal allergies causes and relief doctor explanation'
+      },
+      ta: {
+        title_en: 'Allergies & Immune Sensitivity',
+        title_ta: 'ஒவ்வாமை மற்றும் எதிர்ப்புத் திறன்',
+        answer: 'தூசி, பூந்துகள் (pollen), உணவு அல்லது வாசனைப் பொருட்களை உடலின் நோய் எதிர்ப்பு மண்டலம் ஆபத்தாகக் கருதி, ஹிஸ்டமைன் வேதிப்பொருளை சுரக்கும் போது ஒவ்வாமை (Allergy) ஏற்படுகிறது.',
+        why: [
+          'நோய் எதிர்ப்பு மண்டலம் அளவுக்கு அதிகமாக தூண்டப்பட்டு ஹிஸ்டமைன் சுரப்பது',
+          'காற்றில் உள்ள மகரந்தத் தூள், தூசி மற்றும் பூஞ்சைத் தொற்று',
+          'செல்லப் பிராணிகளின் முடிகள் அல்லது குறிப்பிட்ட உணவுப் பொருட்கள்',
+          'குடும்பத்தில் யாருக்கேனும் ஆஸ்துமா அல்லது தோல் ஒவ்வாமை இருக்கும் மரபியல் பின்னணி'
+        ],
+        steps: [
+          'ஒவ்வாமையை ஏற்படுத்தும் தூசு, வாசனை அல்லது உணவுகளைக் கண்டறிந்து தவிருங்கள்',
+          'வெளியில் சென்று வந்ததும் முகம், கண்களை குளிர்ந்த நீரால் கழுவுங்கள்',
+          'படுக்கை விரிப்புகளை வாரம் ஒருமுறை வெந்நீரில் துவைத்து சுத்தமாக வைத்திருங்கள்',
+          'தொடர் தும்மலுக்கு மருத்துவர் பரிந்துரைக்கும் ஆண்டிஹிஸ்டமைன் மருந்துகளைப் பயன்படுத்தலாம்'
+        ],
+        care: [
+          'உதடு, நாக்கு அல்லது தொண்டையில் வீக்கம், தீவிர மூச்சுத் திணறல் ஏற்பட்டால் உடனே அவசர சிகிச்சை பெறவும் (Anaphylaxis)',
+          'ஒவ்வாமை காரணமாக ஆஸ்துமா தீவிரமடைந்தால் உடனடியாக மருத்துவரை அணுகவும்',
+          'தும்மலும் அரிப்பும் தினசரி வேலையையும் தூக்கத்தையும் பாதித்தால் மருத்துவப் பரிசோதனை அவசியம்'
+        ],
+        watch: [
+          'எந்த நேரத்தில் அல்லது எந்த இடத்தில் தும்மல், அரிப்பு அதிகமாகிறது என்பதைக் கவனியுங்கள்',
+          'கண்களில் நீர் வடிதல் அல்லது தோலில் தடிப்பு ஏற்படுகிறதா என்று பாருங்கள்',
+          'மருந்து எடுத்த பிறகு அறிகுறிகள் குறைகிறதா என்பதைக் கண்காணியுங்கள்'
+        ],
+        prompts: [
+          'எனக்கு ஒவ்வாமைப் பரிசோதனை (Allergy test) தேவையா?',
+          'பருவநிலை மாற்றத்தின் போது ஒவ்வாமை வராமல் தடுக்க நான் என்ன செய்ய வேண்டும்?'
+        ],
+        tip: 'வெளியில் சென்று வந்தவுடன் உடைகளை மாற்றி முகத்தைக் கழுவுவது காற்றில் உள்ள நுண் துகள்கள் வீட்டுக்குள் பரவுவதைத் தடுக்கும்.',
+        yt: 'allergy remedies and causes in tamil'
+      }
+    },
+    nutrition: {
+      en: {
+        title_en: 'Nutrition, Diet & Metabolic Balance',
+        title_ta: 'ஊட்டச்சத்து, உணவுமுறை மற்றும் உடல் ஆரோக்கியம்',
+        answer: 'Nutritional wellness is built on nutrient-dense whole foods, adequate protein, fiber, healthy lipids, and balanced hydration to fuel cellular repair and sustain energy.',
+        why: [
+          'Energy imbalances from highly processed foods rich in refined sugars and trans fats',
+          'Insufficient dietary fiber affecting gut microbiome diversity and lipid profiles',
+          'Micronutrient deficiencies (iron, vitamin D, B-complex) influencing vitality',
+          'Irregular meal timing disrupting insulin sensitivity and metabolic rhythm'
+        ],
+        steps: [
+          'Fill half your plate with colorful vegetables, one quarter with lean protein, and one quarter with complex grains',
+          'Increase dietary soluble fiber through legumes, oats, flaxseeds, and fruits to support cholesterol balance',
+          'Limit ultra-processed snacks, sweetened sodas, and excess sodium',
+          'Stay consistently hydrated with 2 to 2.5 litres of water throughout the day'
+        ],
+        care: [
+          'Consult a physician or dietitian before making radical dietary restrictions or taking high-dose supplements',
+          'Seek medical evaluation for unintended rapid weight loss or chronic digestive malabsorption',
+          'Get routine lipid panels and metabolic screenings checked periodically'
+        ],
+        watch: [
+          'Post-meal energy levels and digestive comfort',
+          'Daily portion sizes and intake of green vegetables and water',
+          'Long-term trends in body weight, waist circumference, and stamina'
+        ],
+        prompts: [
+          'What dietary plan is most sustainable for my metabolic profile and activity level?',
+          'Should I screen for vitamin deficiencies based on my dietary preferences?'
+        ],
+        tip: 'Eating protein and fiber at every meal stabilizes blood glucose, preventing midday energy crashes and persistent cravings.',
+        yt: 'healthy nutrition basics doctor explanation'
+      },
+      ta: {
+        title_en: 'Nutrition, Diet & Metabolic Balance',
+        title_ta: 'ஊட்டச்சத்து, உணவுமுறை மற்றும் உடல் ஆரோக்கியம்',
+        answer: 'சத்தான முழு தானியங்கள், காய்கறிகள், புரதம் மற்றும் நல்ல கொழுப்புகள் நிறைந்த சமச்சீர் உணவு முறையே உடலின் ஆற்றலுக்கும் நீண்ட ஆயுளுக்கும் அடிப்படையாகும்.',
+        why: [
+          'அதிகப்படியான பதப்படுத்தப்பட்ட உணவுகள், சர்க்கரை மற்றும் எண்ணெயில் பொரித்த உணவுகள்',
+          'நார்ச்சத்து (Fiber) குறைவால் செரிமான மந்தம் மற்றும் கொலஸ்ட்ரால் அதிகரிப்பு',
+          'வைட்டமின்கள் மற்றும் தாதுக்கள் பற்றாக்குறையால் உண்டாகும் சோர்வு',
+          'முறையற்ற உணவு நேரங்கள் வளர்சிதை மாற்றத்தை (metabolism) பாதிப்பது'
+        ],
+        steps: [
+          'தினசரி உணவில் சரிபாதி காய்கறிகள் மற்றும் கீரைகளைச் சேர்த்துக் கொள்ளுங்கள்',
+          'சுத்திகரிக்கப்பட்ட வெள்ளை அரிசிக்கு பதிலாக சிறுதானியங்கள், பயறு வகைகளை உண்ணுங்கள்',
+          'இனிப்பு பானங்கள் மற்றும் துரித உணவுகளை (fast foods) தவிருங்கள்',
+          'தினமும் 2 முதல் 2.5 லிட்டர் வரை போதிய அளவு தண்ணீர் அருந்துங்கள்'
+        ],
+        care: [
+          'திடீரென உடல் எடை அதிகமாக குறைந்தாலோ அல்லது அதிகரித்தாலோ மருத்துவரை அணுகவும்',
+          'உணவுக் கட்டுப்பாட்டை தொடங்கும் முன் மருத்துவர் அல்லது ஊட்டச்சத்து நிபுணரிடம் ஆலோசனை பெறவும்',
+          'இரத்தத்தில் கொலஸ்ட்ரால் அல்லது சர்க்கரை அளவு மாறுபட்டால் முறையான பரிசோதனை அவசியம்'
+        ],
+        watch: [
+          'உணவுக்குப் பிறகு சுறுசுறுப்பாக உணர்கிறீர்களா அல்லது தூக்கம் வருகிறதா என்பதைக் கவனியுங்கள்',
+          'செரிமானம் சீராக உள்ளதா மற்றும் மலம் எளிதாக கழிகிறதா என்று பாருங்கள்',
+          'உடலின் ஆற்றல் நாள் முழுவதும் எவ்வாறு உள்ளது என்பதைப் பாருங்கள்'
+        ],
+        prompts: [
+          'என் உடல் எடை மற்றும் வேலைக்கு ஏற்ற சரியான உணவு முறை எது?',
+          'எனக்கு ஏதேனும் வைட்டமின் அல்லது தாது பற்றாக்குறை உள்ளதா?'
+        ],
+        tip: 'ஒவ்வொரு வேளை உணவிலும் போதிய அளவு புரதமும் காய்கறிகளும் இருப்பது ரத்த சர்க்கரை அளவை சீராக வைத்து, அடிக்கடி பசி எடுப்பதைத் தடுக்கும்.',
+        yt: 'healthy diet tips in tamil doctor advice'
+      }
+    },
     dynamic_general: {
       en: {
         title_en: cleaned ? `Understanding: ${cleaned.charAt(0).toUpperCase() + cleaned.slice(1)}` : 'Health Guidance & Understanding',
@@ -824,12 +1036,10 @@ Optional context selected by user:
     try {
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
       
-      const headers = { 'Content-Type': 'application/json' };
-      if (apiKey.startsWith('AIzaSy')) {
-        headers['x-goog-api-key'] = apiKey;
-      } else {
-        headers['Authorization'] = `Bearer ${apiKey}`;
-      }
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey
+      };
 
       const response = await fetch(endpoint, {
         method: 'POST',
